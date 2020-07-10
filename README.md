@@ -14,3 +14,6 @@ Planning to support:
 
 Basicall Off-policy methods
 * DDPG
+* SAC
+    * Basic SAC
+    * Twin SAC without V
