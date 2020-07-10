@@ -47,7 +47,7 @@ class Trainer:
                 length += 1
                 ob_tensor = torch.Tensor(ob).to(self.agent.device)
                 act = self.agent.eval_act(ob_tensor)
-                ob, r, done, infos = self.env.step(act)
+                ob, r, done, _ = self.env.step(act)
                 episode_reward += r
             rewards.append(episode_reward)
             lengths.append(length)
@@ -65,8 +65,9 @@ class Trainer:
 
                 if self.total_update % self.eval_interval == 0:
                     eval_info = self.eval()
-                    time_consumed = time.time() - self.update_timestamp
-                    print(eval_info)
+                    current_time = time.time()
+                    time_consumed = current_time - self.update_timestamp
+                    self.update_timestamp = current_time
                     self.logger.add_eval_info(
                         self.total_update, time_consumed, eval_info)
 

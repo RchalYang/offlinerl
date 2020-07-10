@@ -27,16 +27,16 @@ class DDPGAgent(Agent):
             output_shape=self.env.action_space.shape[0],
             policy_cls=policies.FixGuassianContPolicy,
             policy_params=policy_params)
-
         self.target_pf = copy.deepcopy(self.pf)
+
         self.qf = networks.get_network(
             input_shape=(self.env.observation_space.shape[0] +
                          self.env.action_space.shape[0],),
             output_shape=1,
             network_cls=networks.FlattenNet,
             network_params=q_params)
-
         self.target_qf = copy.deepcopy(self.qf)
+
         self.to(self.device)
 
         self.plr = plr
@@ -51,6 +51,8 @@ class DDPGAgent(Agent):
             self.qf.parameters(),
             lr=self.qlr,
         )
+
+        self.qf_criterion = nn.MSELoss()
 
     def update(self, batch):
         self.training_update_num += 1
@@ -84,7 +86,8 @@ class DDPGAgent(Agent):
 
         q_target = rewards + (1. - terminals) * self.discount * target_q_values
         q_pred = self.qf([obs, actions])
-        qf_loss = 0.5 * ((q_pred - q_target.detach())**2).mean()
+        assert q_pred.shape == q_target.shape
+        qf_loss = self.qf_criterion(q_pred, q_target.detach())
 
         """
         Update Networks
@@ -98,7 +101,7 @@ class DDPGAgent(Agent):
         qf_loss.backward()
         self.qf_optimizer.step()
 
-        self._update_target_networks()
+        self._update_target_functions()
 
         # Information For Logger
         info = {}
@@ -114,7 +117,7 @@ class DDPGAgent(Agent):
         return info
 
     @property
-    def networks(self):
+    def functions(self):
         return [
             self.pf,
             self.qf,
@@ -123,14 +126,14 @@ class DDPGAgent(Agent):
         ]
 
     @property
-    def snapshot_networks(self):
+    def snapshot_functions(self):
         return [
             ["pf", self.pf],
             ["qf", self.qf],
         ]
 
     @property
-    def target_networks(self):
+    def target_functions(self):
         return [
             (self.pf, self.target_pf),
             (self.qf, self.target_qf)

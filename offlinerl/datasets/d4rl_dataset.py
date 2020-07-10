@@ -1,6 +1,7 @@
 from torch.utils.data import Dataset
 import gym
 import d4rl
+import numpy as np
 from gym.wrappers import TimeLimit
 
 MAZE2D_ENVS = [
@@ -98,8 +99,8 @@ class D4RLDataset(Dataset):
             "obs": self.obs[index],
             "acts": self.acts[index],
             "next_obs": self.obs[index+1],
-            "rews": self.rews[index],
-            "dones": self.dones[index]
+            "rews": self.rews[index, np.newaxis],
+            "dones": self.dones[index, np.newaxis]
         }
 
     def __len__(self):

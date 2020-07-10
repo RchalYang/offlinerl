@@ -1,6 +1,8 @@
 import os.path as osp
 import torch
 import offlinerl.agent.utils as atu
+import pathlib
+
 
 class Agent():
     def __init__(
@@ -25,10 +27,11 @@ class Agent():
         return []
 
     @property
-    def target_networks(self):
+    def target_functions(self):
         return []
 
     def snapshot(self, prefix, updates):
+        pathlib.Path(prefix).mkdir(parents=True, exist_ok=True)
         for name, function in self.snapshot_functions:
             model_file_name = "model_{}_{}.pth".format(name, updates)
             model_path = osp.join(prefix, model_file_name)
@@ -44,11 +47,11 @@ class Agent():
         for net in self.functions:
             net.to(device)
 
-    def _update_target_networks(self):
+    def _update_target_functions(self):
         if self.use_soft_update:
-            for net, target_net in self.target_networks:
-                atu.soft_update_from_to(net, target_net, self.tau)
+            for func, target_func in self.target_functions:
+                atu.soft_update_from_to(func, target_func, self.tau)
         else:
             if self.training_update_num % self.target_hard_update_period == 0:
-                for net, target_net in self.target_networks:
-                    atu.copy_model_params_from_to(net, target_net)
+                for func, target_func in self.target_functions:
+                    atu.copy_model_params_from_to(func, target_func)
