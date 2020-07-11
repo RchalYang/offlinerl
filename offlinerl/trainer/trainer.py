@@ -35,6 +35,8 @@ class Trainer:
 
         self.update_timestamp = time.time()
 
+        self.best_eval = None
+
     def eval(self):
         rewards = []
         lengths = []
@@ -70,6 +72,11 @@ class Trainer:
                     self.update_timestamp = current_time
                     self.logger.add_eval_info(
                         self.total_update, time_consumed, eval_info)
+
+                    if self.best_eval is None or \
+                       eval_info["episode_rewards"] > self.best_eval:
+                        self.best_eval=eval_info["episode_rewards"]
+                        self.agent.snapshot(self.snapshot_dir, 'best')
 
                 if self.total_update % self.save_interval == 0:
                     self.agent.snapshot(self.snapshot_dir, self.total_update)
