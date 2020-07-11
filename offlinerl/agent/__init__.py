@@ -1,6 +1,6 @@
 import torch
 import os.path as osp
-from .behaviour_clone_agent import BehaviorCloneAgent
+from .behaviour_clone import BehaviorCloneAgent
 from .ddpg import DDPGAgent
 from .twin_sac_q import TwinSACQAgent
 from .sac import SACAgent
