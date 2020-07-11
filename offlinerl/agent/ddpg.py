@@ -1,6 +1,7 @@
 import numpy as np
 import copy
 import torch
+import torch.nn as nn
 import torch.optim as optim
 from offlinerl.agent.base_agent import Agent
 import offlinerl.policies as policies

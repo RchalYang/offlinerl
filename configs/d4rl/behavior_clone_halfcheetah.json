@@ -1,18 +1,12 @@
 {
-    "agent_id":"ddpg",
+    "agent_id":"behavior_clone",
     "env_id" : "halfcheetah-expert-v0",
     "agent":{
         "policy_params": { 
             "hidden_shapes": [400,300],
-            "append_hidden_shapes":[],
-            "norm_std_explore": 0.1       
-        },
-        "q_params": { 
-            "hidden_shapes": [400,300],
-            "append_hidden_shapes":[]        
+            "append_hidden_shapes":[]
         },
         "plr": 3e-4,
-        "qlr": 3e-4,
         "discount": 0.99
     },
     "training": {

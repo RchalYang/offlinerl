@@ -15,10 +15,10 @@
         "discount": 0.99
     },
     "training": {
-        "training_epoch" : 100,
-        "batch_size" : 256,
-        "eval_interval": 20,
+        "training_epoch" : 50,
+        "batch_size" : 2048,
+        "eval_interval": 500,
         "eval_episodes": 3,
-        "save_interval": 100
+        "save_interval": 5000
     }
 }
