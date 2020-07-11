@@ -26,7 +26,8 @@ class UniformPolicyContinuous(nn.Module):
 
 class DetContPolicy(networks.Net):
     def forward(self, x):
-        return torch.tanh(super().forward(x))
+        # return torch.tanh(super().forward(x))
+        return super().forward(x)
 
     def eval_act(self, x):
         with torch.no_grad():
@@ -44,7 +45,8 @@ class FixGuassianContPolicy(networks.Net):
         self.norm_std_explore = norm_std_explore
 
     def forward(self, x):
-        return torch.tanh(super().forward(x))
+        # return torch.tanh(super().forward(x))
+        return super().forward(x)
 
     def eval_act(self, x):
         with torch.no_grad():
