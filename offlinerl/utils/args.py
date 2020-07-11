@@ -7,6 +7,8 @@ def get_args():
     parser = argparse.ArgumentParser(description='RL')
     parser.add_argument('--seed', type=int, default=0,
                         help='random seed (default: 1)')
+    parser.add_argument('--num_workers', type=int, default=8,
+                        help='number of workers for dataloader')
     parser.add_argument("--config", type=str,   default=None,
                         help="config file", )
     parser.add_argument('--save_dir', type=str, default='./snapshots',

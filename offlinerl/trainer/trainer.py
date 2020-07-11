@@ -12,14 +12,15 @@ class Trainer:
         batch_size,
         eval_interval,
         eval_episodes,
-        save_interval
+        save_interval,
+        num_workers=8
     ):
         self.env = env
         self.dataset = dataset
         self.agent = agent
 
         self.dataloader = tdata.DataLoader(
-            dataset, batch_size=batch_size)
+            dataset, batch_size=batch_size, num_workers=num_workers)
 
         self.eval_interval = eval_interval
         self.eval_episodes = eval_episodes

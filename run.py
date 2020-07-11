@@ -33,7 +33,7 @@ def main(args):
     #     env, **params["agent"])
 
     trainer = Trainer(
-        env, dataset, agent, logger,
+        env, dataset, agent, logger, num_workers=args.num_workers,
         **params["training"])
     trainer.train()
 
