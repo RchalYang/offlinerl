@@ -1,0 +1,23 @@
+{
+    "agent_id":"behavior_clone",
+    "env_id" : "halfcheetah-random-v0",
+    "env": {
+        "norm_act": true
+    },
+    "agent":{
+        "policy_params": { 
+            "hidden_shapes": [400,300],
+            "append_hidden_shapes":[],
+            "tanh_action": true
+        },
+        "plr": 3e-4,
+        "discount": 0.99
+    },
+    "training": {
+        "training_epoch" : 50,
+        "batch_size" : 256,
+        "eval_interval": 500,
+        "eval_episodes": 3,
+        "save_interval": 5000
+    }
+}

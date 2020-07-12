@@ -1,10 +1,15 @@
 {
-    "agent_id":"twin_sac_q",
+    "agent_id":"ddpg",
     "env_id" : "halfcheetah-expert-v0",
+    "env": {
+        "norm_act": true
+    },
     "agent":{
         "policy_params": { 
             "hidden_shapes": [400,300],
-            "append_hidden_shapes":[] 
+            "append_hidden_shapes":[],
+            "norm_std_explore": 0.1,
+            "tanh_action": true
         },
         "q_params": { 
             "hidden_shapes": [400,300],
@@ -16,7 +21,7 @@
     },
     "training": {
         "training_epoch" : 50,
-        "batch_size" : 2048,
+        "batch_size" : 256,
         "eval_interval": 500,
         "eval_episodes": 3,
         "save_interval": 5000

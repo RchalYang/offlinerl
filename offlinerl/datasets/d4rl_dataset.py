@@ -3,6 +3,7 @@ import gym
 import d4rl
 import numpy as np
 from gym.wrappers import TimeLimit
+from .env_wrapper import NormAct
 
 MAZE2D_ENVS = [
     'maze2d-open-v0',
@@ -73,13 +74,15 @@ D4RL_ENVS = MAZE2D_ENVS + MINIGRID_ENVS + ADROIT_ENVS + MUJOCO_ENVS + \
     ANTMAZE_ENVS + FRANKAKITCHEN_ENVS
 
 
-def get_d4rl_env_dataset(id):
+def get_d4rl_env_dataset(id, norm_act=False):
     assert id in D4RL_ENVS
     env = gym.make(id)
     if isinstance(env, TimeLimit):
         dataset = env.env.get_dataset()
     else:
         dataset = env.get_dataset()
+    if norm_act:
+        env = NormAct(env)
     return env, D4RLDataset(dataset)
 
 

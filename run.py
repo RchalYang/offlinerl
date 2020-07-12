@@ -15,7 +15,8 @@ def main(args):
         torch.backends.cudnn.deterministic = True
 
     params = get_params(args.config)
-    env, dataset = get_dataset_env(params["env_id"])
+
+    env, dataset = get_dataset_env(params["env_id"], params["env"])
     env.seed(args.seed)
 
     logger = Logger(
