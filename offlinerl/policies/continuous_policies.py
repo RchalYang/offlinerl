@@ -25,8 +25,13 @@ class UniformPolicyContinuous(nn.Module):
 
 
 class DetContPolicy(networks.Net):
+    def __init__(self, tanh_action=False, **kwargs):
+        self.tanh_action = tanh_action
+        super(DetContPolicy, self).__init__(**kwargs)
+
     def forward(self, x):
-        # return torch.tanh(super().forward(x))
+        if self.tanh_action:
+            return torch.tanh(super().forward(x))
         return super().forward(x)
 
     def eval_act(self, x):
@@ -40,12 +45,14 @@ class DetContPolicy(networks.Net):
 
 
 class FixGuassianContPolicy(networks.Net):
-    def __init__(self, norm_std_explore, **kwargs):
+    def __init__(self, norm_std_explore, tanh_action=False, **kwargs):
         super().__init__(**kwargs)
         self.norm_std_explore = norm_std_explore
+        self.tanh_action = tanh_action
 
     def forward(self, x):
-        # return torch.tanh(super().forward(x))
+        if self.tanh_action:
+            return torch.tanh(super().forward(x))
         return super().forward(x)
 
     def eval_act(self, x):
