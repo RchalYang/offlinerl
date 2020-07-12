@@ -10,6 +10,7 @@ class NormAct(gym.ActionWrapper):
         super(NormAct, self).__init__(env)
         ub = np.ones(self.env.action_space.shape)
         self.action_space = gym.spaces.Box(-1 * ub, ub)
+        self.original_action_space = self.env.action_space
 
     def action(self, action):
         lb = self.env.action_space.low

@@ -53,7 +53,12 @@ class BehaviorCloneAgent(Agent):
         """
 
         new_actions = self.pf(obs)
-
+        if self.pf.tanh_action:
+            lb = torch.Tensor(
+                self.env.original_action_space.low).to(self.device)
+            ub = torch.Tensor(
+                self.env.original_action_space.high).to(self.device)
+            new_actions = lb + (new_actions + 1) * 0.5 * (ub - lb)
         policy_loss = self.behavior_clone_loss(new_actions, actions)
 
         """
