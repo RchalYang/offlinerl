@@ -12,3 +12,5 @@ $pythonpath run.py --config $config --log_dir $logdir --seed $SEED1 --id $id &
 $pythonpath run.py --config $config --log_dir $logdir --seed $SEED2 --id $id &
 
 $pythonpath run.py --config $config --log_dir $logdir --seed $SEED3 --id $id &
+
+wait
