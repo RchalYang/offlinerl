@@ -21,10 +21,11 @@ class ContBCQAgent(Agent):
         super(ContBCQAgent, self).__init__(env=env, **kwargs)
 
         # Here Policy function serve as a additional noise
-        self.tanh_action = True if \
-            "tanh_action" in policy_params and \
-            policy_params["tanh_action"] is True \
-            else False
+        if "tanh_action" in policy_params:
+            self.tanh_action = policy_params["tanh_action"]
+            del policy_params["tanh_action"]
+        else:
+            self.tanh_action = False
         self.pf = networks.get_network(
             input_shape=(self.env.observation_space.shape[0] +
                          self.env.action_space.shape[0],),
@@ -49,23 +50,21 @@ class ContBCQAgent(Agent):
             network_params=q_params)
         self.target_qf2 = copy.deepcopy(self.qf2)
 
-        latent_dim = encoder_params["latent_dim"]
-        del encoder_params["latent_dim"]
+        latent_shape = decoder_params["latent_shape"][0]
         self.encoder = networks.get_network(
             input_shape=(self.env.observation_space.shape[0] +
                          self.env.action_space.shape[0],),
-            output_shape=2 * latent_dim,
-            network_cls=networks.Encoder,
+            output_shape=2 * latent_shape,
+            network_cls=networks.FlattenEncoder,
             network_params=q_params)
 
         self.phi = phi
         self.lmbda = lmbda
 
         self.decoder = networks.get_network(
-            input_shape=(self.env.observation_space.shape[0] +
-                         latent_dim,),
+            input_shape=self.env.observation_space.shape,
             output_shape=self.env.action_space.shape[0],
-            network_cls=networks.FlattenNet,
+            network_cls=networks.FlattenDecoder,
             network_params=decoder_params)
 
         self.qlr = qlr
@@ -87,10 +86,11 @@ class ContBCQAgent(Agent):
             lr=self.plr,
         )
 
+        from itertools import chain
         self.vae_optimizer = optimizer_class(
-            [self.decoder.parameters(),
-             self.encoder.parameters()],
-            lr=self.plr,
+            [{"params": self.decoder.parameters()},
+             {"params": self.encoder.parameters()}],
+            lr=self.vaelr,
         )
 
         self.qf_criterion = nn.MSELoss()
@@ -98,13 +98,15 @@ class ContBCQAgent(Agent):
 
     def explore(self, obs):
         with torch.no_grad():
-            obs = obs.unsqueeze(0).repeat(100, 0)
+            obs = torch.repeat_interleave(obs.unsqueeze(0), 10, 0)
             sampled_action = self.decoder([obs])
-            sampled_noise = self.pf(obs, sampled_action)
+            sampled_noise = self.pf([obs, sampled_action])
             sampled_action = sampled_action + self.phi * sampled_noise
             sampled_action = torch.tanh(sampled_action)
             q1 = self.qf1([obs, sampled_action])
             ind = q1.max(0, keepdim=True)[1]
+            ind = torch.repeat_interleave(
+                ind, sampled_action.shape[-1], -1)
         return {
             "action": sampled_action.gather(0, ind).squeeze(0)
         }
@@ -124,8 +126,9 @@ class ContBCQAgent(Agent):
         """
         Reconstruction Loss
         """
-        sampled, mean, std = self.encoder([obs, acts])
+        sampled, mean, std, _ = self.encoder([obs, acts])
         recon = self.decoder([obs, sampled])
+        recon = torch.tanh(recon)
         reconstruction_loss = self.vae_criterion(recon, acts)
         kl_divergence = -0.5 * (
             1 + torch.log(std.pow(2)) - mean.pow(2) - std.pow(2)).mean()
@@ -141,24 +144,27 @@ class ContBCQAgent(Agent):
 
             sampled_acts_next = self.decoder([repeated_next_obs])
             noise_next = self.target_pf([repeated_next_obs, sampled_acts_next])
-
-            generated_acts = sampled_acts_next.unsqueeze(1) + \
-                self.phi * noise_next
-            target_q1 = self.target_qf1([next_obs, generated_acts])
-            target_q2 = self.target_qf2([next_obs, generated_acts])
+            generated_acts = sampled_acts_next + self.phi * noise_next
+            if self.tanh_action:
+                generated_acts = torch.tanh(generated_acts)
+            target_q1 = self.target_qf1([repeated_next_obs, generated_acts])
+            target_q2 = self.target_qf2([repeated_next_obs, generated_acts])
 
             target_q = self.lmbda * torch.min(target_q1, target_q2) + \
                 (1. - self.lmbda) * torch.max(target_q1, target_q2)
 
-            target_q = target_q.max(1)[0].squeeze(-1)
-
+            target_q = target_q.max(1)[0]
             target_q = rews + self.discount * (1 - ters) * target_q
 
         q1_pred = self.qf1([obs, acts])
         q2_pred = self.qf2([obs, acts])
 
-        assert q1_pred.shape == target_q.shape
-        assert q2_pred.shape == target_q.shape
+        assert q1_pred.shape == target_q.shape, \
+            "q1_pred shape: {}, target_q shape: {}".format(
+                q1_pred.shape, target_q.shape)
+        assert q2_pred.shape == target_q.shape, \
+            "q2_pred shape: {}, target_q shape: {}".format(
+                q2_pred.shape, target_q.shape)
         qf1_loss = self.qf_criterion(q1_pred, target_q)
         qf2_loss = self.qf_criterion(q2_pred, target_q)
 
@@ -167,11 +173,12 @@ class ContBCQAgent(Agent):
 
         sampled_action_current = sampled_action_current + \
             self.phi * noise_current
-
+        if self.tanh_action:
+            sampled_action_current = torch.tanh(sampled_action_current)
         policy_loss = - torch.min(
             self.qf1([obs, sampled_action_current]),
             self.qf1([obs, sampled_action_current])
-        )
+        ).mean()
 
         """
         Update Networks

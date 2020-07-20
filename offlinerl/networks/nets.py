@@ -130,14 +130,15 @@ class FlattenDecoder(Net):
         assert len(input_shape) == 1, "Current just support 1-dim input"
         assert len(latent_shape) == 1, "Current just support 1-dim input"
         self.latent_shape = latent_shape
-        super().__init__(input_shape=input_shape+latent_shape, **kwargs)
+        super().__init__(
+            input_shape=(input_shape[0] + latent_shape[0]), **kwargs)
 
     def forward(self, input):
         if len(input) == 1:
             input.append(
                 torch.randn(
-                    input.shape[:-1] + torch.Size(self.latent_shape)
-                ).to(input.device).clamp(-0.5, 0.5)
+                    input[0].shape[:-1] + torch.Size(self.latent_shape)
+                ).to(input[0].device).clamp(-0.5, 0.5)
             )
         out = torch.cat(input, dim=-1)
         return super().forward(out)

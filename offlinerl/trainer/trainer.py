@@ -41,6 +41,7 @@ class Trainer:
     def eval(self):
         rewards = []
         lengths = []
+        start_time = time.time()
         for _ in range(self.eval_episodes):
             ob = self.env.reset()
             done = False
@@ -56,7 +57,8 @@ class Trainer:
             lengths.append(length)
         return {
             "episode_rewards": np.mean(rewards),
-            "episode_lengths": np.mean(lengths)
+            "episode_lengths": np.mean(lengths),
+            "eval_times": time.time() - start_time
         }
 
     def train(self):
