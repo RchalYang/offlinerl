@@ -101,3 +101,43 @@ class FlattenBootstrappedNet(BootstrappedNet):
     def forward(self, input, head_idxs):
         out = torch.cat(input, dim=-1)
         return super().forward(out, head_idxs)
+
+
+ENCODE_LOG_SIG_MAX = 15
+ENCODE_LOG_SIG_MIN = -4
+
+
+class Encoder(Net):
+    def forward(self, input):
+        output = super().forward(input)
+        mean, log_std = output.chunk(2, dim=-1)
+        log_std = log_std.clamp(ENCODE_LOG_SIG_MIN, ENCODE_LOG_SIG_MAX)
+        std = torch.exp(log_std)
+
+        z = mean + std * torch.randn_like(std)
+
+        return z, mean, std, log_std
+
+
+class FlattenEncoder(Encoder):
+    def forward(self, input):
+        out = torch.cat(input, dim=-1)
+        return super().forward(out)
+
+
+class FlattenDecoder(Net):
+    def __init__(self, input_shape, latent_shape, **kwargs):
+        assert len(input_shape) == 1, "Current just support 1-dim input"
+        assert len(latent_shape) == 1, "Current just support 1-dim input"
+        self.latent_shape = latent_shape
+        super().__init__(input_shape=input_shape+latent_shape, **kwargs)
+
+    def forward(self, input):
+        if len(input) == 1:
+            input.append(
+                torch.randn(
+                    input.shape[:-1] + torch.Size(self.latent_shape)
+                ).to(input.device).clamp(-0.5, 0.5)
+            )
+        out = torch.cat(input, dim=-1)
+        return super().forward(out)
