@@ -12,8 +12,15 @@ Planning to support:
 
 # Methods
 
-Basicall Off-policy methods
+Behavior Clone methods:
+* Behavior cloning
+
+Basic Off-policy methods
 * DDPG
 * SAC
     * Basic SAC
     * Twin SAC without V
+
+Offline RL methods:
+* BCQ
+    * Continuous BCQ
